@@ -9,6 +9,12 @@ function App() {
   const { tracks } = useAppStore();
   const { isAuthenticated } = useSpotifyAuth();
 
+  console.log('App: Render state:', {
+    isAuthenticated,
+    tracksLength: tracks.length,
+    currentPath: window.location.pathname
+  });
+
   return (
     <div className="App">
       <LoadingScreen />

@@ -14,40 +14,69 @@ export const CallbackPage: React.FC = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log('CallbackPage: Starting callback handling');
+        console.log('CallbackPage: Current URL:', window.location.href);
+        
         // Check for error parameter
         const urlParams = new URLSearchParams(window.location.search);
         const errorParam = urlParams.get('error');
+        const code = urlParams.get('code');
+        
+        console.log('CallbackPage: URL params:', { error: errorParam, code: code?.substring(0, 10) + '...' });
         
         if (errorParam) {
+          console.error('CallbackPage: OAuth error:', errorParam);
           setError(`Spotify kirjautumis virhe: ${errorParam}`);
           setTimeout(() => navigate('/'), 3000);
           return;
         }
 
+        if (!code) {
+          console.error('CallbackPage: No authorization code found');
+          setError('Ei saatu valtuutuskoodia Spotifysta');
+          setTimeout(() => navigate('/'), 3000);
+          return;
+        }
+
         setStatus('Vaihdetaan koodia tokenit...');
+        console.log('CallbackPage: Exchanging code for token...');
         
         // Handle the OAuth callback
         const authState = await spotifyAuth.handleCallback();
         
+        console.log('CallbackPage: Auth state received:', {
+          hasAccessToken: !!authState?.accessToken,
+          hasRefreshToken: !!authState?.refreshToken,
+          isAuthenticated: authState?.isAuthenticated
+        });
+        
         if (!authState || !authState.accessToken) {
+          console.error('CallbackPage: No auth state or access token');
           throw new Error('Ei saatu access tokenia');
         }
 
         setStatus('Haetaan käyttäjätietoja...');
+        console.log('CallbackPage: Setting auth state...');
         
         // Set authentication state
         setAccessToken(authState.accessToken);
         setAuthenticated(true);
         
+        console.log('CallbackPage: Fetching user info...');
         // Fetch user info
         spotifyAPI.setAccessToken(authState.accessToken);
         const user = await spotifyAPI.getCurrentUser();
         setUser(user);
         
+        console.log('CallbackPage: User info fetched:', user.display_name);
         setStatus('Kirjautuminen onnistui! Ohjataan...');
         
         // Redirect to main app after short delay
-        setTimeout(() => navigate('/'), 1500);
+        console.log('CallbackPage: Scheduling redirect...');
+        setTimeout(() => {
+          console.log('CallbackPage: Redirecting to main app');
+          navigate('/');
+        }, 1500);
         
       } catch (error) {
         console.error('Callback handling error:', error);
