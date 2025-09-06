@@ -65,11 +65,13 @@ Spotify Web API ←→ Services ←→ IndexedDB ←→ Zustand Store ←→ Rea
 - `auth.ts`: OAuth2 flow management
 
 ### Component Architecture
-- **App.tsx**: Route-like logic (Auth → Sync → Main App)
+- **App.tsx**: Main application flow (Auth → Sync → Main App)
 - **AuthSetup.tsx**: Spotify Client ID input and OAuth initiation
+- **CallbackPage.tsx**: Handles OAuth2 callback from Spotify
 - **DataSync.tsx**: Progress tracking for data synchronization
 - **MainApp.tsx**: Filter interface and playlist generation
 - **Filter Components**: Dynamic filter generation based on user's music data
+- **React Router**: Handles `/callback` route for OAuth2 flow
 
 ### Database Schema (IndexedDB)
 - **tracks**: Core track data with playlist relationships
@@ -159,6 +161,7 @@ The UI is in Finnish. When adding new UI text, maintain language consistency:
 - Static site deployment (Vercel/Netlify)
 - Update Spotify App redirect URI to production URL
 - Ensure proper HTTPS for OAuth2
+- `public/_redirects` file handles SPA routing on Netlify
 
 ### Environment Configuration
 - No server-side environment variables needed

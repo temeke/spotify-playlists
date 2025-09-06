@@ -17,32 +17,6 @@ export const useSpotifyAuth = () => {
   // Initialize auth state on mount
   useEffect(() => {
     const initAuth = async () => {
-      // Check for callback parameters in URL (authorization code flow)
-      if (window.location.search.includes('code=') || window.location.search.includes('error=')) {
-        try {
-          const authState = await spotifyAuth.handleCallback();
-          if (authState && authState.accessToken) {
-            setAccessToken(authState.accessToken);
-            setAuthenticated(true);
-            
-            // Fetch user info
-            try {
-              spotifyAPI.setAccessToken(authState.accessToken);
-              const user = await spotifyAPI.getCurrentUser();
-              setUser(user);
-            } catch (error) {
-              console.error('Failed to fetch user info:', error);
-              logout();
-            }
-          } else {
-            console.error('Failed to handle Spotify callback');
-          }
-        } catch (error) {
-          console.error('Error handling Spotify callback:', error);
-        }
-        return;
-      }
-
       // Check for existing auth state
       const existingAuthState = spotifyAuth.loadAuthState();
       if (existingAuthState && existingAuthState.accessToken) {
