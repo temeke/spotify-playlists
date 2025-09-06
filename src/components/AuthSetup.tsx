@@ -18,11 +18,10 @@ export const AuthSetup: React.FC = () => {
       setIsLoading(true);
       setClientId(clientIdInput.trim());
       await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure state is saved
-      login();
+      await login();
     } catch (error) {
       console.error('Login error:', error);
       alert('Kirjautuminen epäonnistui. Tarkista Client ID.');
-    } finally {
       setIsLoading(false);
     }
   };

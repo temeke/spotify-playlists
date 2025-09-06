@@ -109,9 +109,11 @@ Filters are dynamically generated from user's actual music data:
 ## Spotify Integration Specifics
 
 ### Authentication Requirements
+- **OAuth2 Flow**: Uses Authorization Code with PKCE (more secure than deprecated Implicit Grant)
 - Client ID must be configured in Spotify Developer Console
 - Redirect URI: `http://localhost:5173/callback` (dev) or production URL
-- Required scopes: user data, playlist read/write
+- **Critical**: Redirect URI must EXACTLY match what's configured in Spotify App settings
+- Required scopes: user-read-private, user-read-email, playlist-read-private, playlist-read-collaborative, playlist-modify-public, playlist-modify-private
 
 ### API Limitations & Handling
 - Rate limits: Built-in delays and retry logic

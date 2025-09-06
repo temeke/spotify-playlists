@@ -11,6 +11,7 @@ class SpotifyAuth {
     'playlist-modify-public',
     'playlist-modify-private',
   ];
+  private codeVerifier: string = '';
 
   setClientId(clientId: string) {
     this.clientId = clientId;
@@ -27,40 +28,65 @@ class SpotifyAuth {
     return text;
   }
 
-  // Start OAuth flow
-  initiateLogin(): void {
+  // Generate code verifier for PKCE
+  private generateCodeVerifier(): string {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return btoa(String.fromCharCode.apply(null, Array.from(array)))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+  }
+
+  // Generate code challenge for PKCE
+  private async generateCodeChallenge(verifier: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(digest))))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
+  }
+
+  // Start OAuth flow with PKCE
+  async initiateLogin(): Promise<void> {
     if (!this.clientId) {
       throw new Error('Client ID not set. Call setClientId() first.');
     }
 
     const state = this.generateRandomString(16);
+    this.codeVerifier = this.generateCodeVerifier();
+    const codeChallenge = await this.generateCodeChallenge(this.codeVerifier);
+
+    // Store state and code verifier
     localStorage.setItem('spotify_auth_state', state);
+    localStorage.setItem('spotify_code_verifier', this.codeVerifier);
 
     const params = new URLSearchParams({
-      response_type: 'token',
+      response_type: 'code',
       client_id: this.clientId,
       scope: this.scopes.join(' '),
       redirect_uri: this.redirectUri,
       state: state,
+      code_challenge_method: 'S256',
+      code_challenge: codeChallenge,
       show_dialog: 'true'
     });
 
     window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
   }
 
-  // Handle callback from Spotify
-  handleCallback(): SpotifyAuthState | null {
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
+  // Handle callback from Spotify (Authorization Code flow)
+  async handleCallback(): Promise<SpotifyAuthState | null> {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const error = urlParams.get('error');
 
-    const accessToken = params.get('access_token');
-    const tokenType = params.get('token_type');
-    const expiresIn = params.get('expires_in');
-    const state = params.get('state');
-    const error = params.get('error');
-
-    // Clear URL hash
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    // Clear URL parameters
+    window.history.replaceState(null, '', window.location.pathname);
 
     if (error) {
       console.error('Spotify auth error:', error);
@@ -74,24 +100,60 @@ class SpotifyAuth {
       return null;
     }
 
-    localStorage.removeItem('spotify_auth_state');
-
-    if (!accessToken || tokenType !== 'Bearer') {
-      console.error('Invalid token response from Spotify');
+    if (!code) {
+      console.error('No authorization code received');
       return null;
     }
 
-    const expiresAt = Date.now() + (parseInt(expiresIn || '3600') * 1000);
+    // Get stored code verifier
+    const codeVerifier = localStorage.getItem('spotify_code_verifier');
+    if (!codeVerifier) {
+      console.error('No code verifier found');
+      return null;
+    }
 
-    const authState: SpotifyAuthState = {
-      accessToken,
-      refreshToken: null, // Implicit flow doesn't provide refresh token
-      expiresAt,
-      isAuthenticated: true,
-    };
+    // Clean up stored values
+    localStorage.removeItem('spotify_auth_state');
+    localStorage.removeItem('spotify_code_verifier');
 
-    this.saveAuthState(authState);
-    return authState;
+    try {
+      // Exchange authorization code for access token
+      const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: code,
+          redirect_uri: this.redirectUri,
+          client_id: this.clientId,
+          code_verifier: codeVerifier,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Token exchange failed:', response.status, response.statusText);
+        return null;
+      }
+
+      const tokenData = await response.json();
+      
+      const expiresAt = Date.now() + (tokenData.expires_in * 1000);
+
+      const authState: SpotifyAuthState = {
+        accessToken: tokenData.access_token,
+        refreshToken: tokenData.refresh_token || null,
+        expiresAt,
+        isAuthenticated: true,
+      };
+
+      this.saveAuthState(authState);
+      return authState;
+    } catch (error) {
+      console.error('Error exchanging code for token:', error);
+      return null;
+    }
   }
 
   // Save auth state to localStorage
