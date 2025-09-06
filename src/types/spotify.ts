@@ -24,6 +24,9 @@ export interface SpotifyPlaylist {
     height: number;
     width: number;
   }>;
+  external_urls: {
+    spotify: string;
+  };
 }
 
 export interface SpotifyTrack {
@@ -50,6 +53,7 @@ export interface SpotifyTrack {
   external_urls: {
     spotify: string;
   };
+  is_local?: boolean;
 }
 
 export interface SpotifyAudioFeatures {

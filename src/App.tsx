@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAppStore } from './stores/app-store';
 import { useSpotifyAuth } from './hooks/use-spotify-auth';
 import { AuthSetup } from './components/AuthSetup';
@@ -7,7 +6,7 @@ import { MainApp } from './components/MainApp';
 import { LoadingScreen } from './components/LoadingScreen';
 
 function App() {
-  const { tracks, loading } = useAppStore();
+  const { tracks } = useAppStore();
   const { isAuthenticated } = useSpotifyAuth();
 
   return (

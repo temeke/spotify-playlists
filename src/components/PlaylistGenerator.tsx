@@ -195,14 +195,14 @@ export const PlaylistGenerator: React.FC = () => {
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-purple-400">
-                    {new Set(uniqueTracks.slice(0, maxTracks).flatMap(t => t.artists.map(a => a.name))).size}
+                    {new Set(uniqueTracks.slice(0, maxTracks).flatMap(t => t.artists.map((a: any) => a.name))).size}
                   </div>
                   <div className="text-sm text-gray-400">Artistia</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">
                     {new Set(uniqueTracks.slice(0, maxTracks).flatMap(t => 
-                      t.artistDetails?.flatMap(a => a.genres) || []
+                      t.artistDetails?.flatMap((a: any) => a.genres) || []
                     )).size}
                   </div>
                   <div className="text-sm text-gray-400">Genreä</div>

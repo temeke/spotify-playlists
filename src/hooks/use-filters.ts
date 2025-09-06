@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useAppStore } from '../stores/app-store';
 import type { FilterOptions, EnhancedTrack } from '../types';
-import { debounce } from '../utils';
 
 export interface UseFiltersReturn {
   filterOptions: Partial<FilterOptions>;
@@ -35,13 +34,7 @@ export const useFilters = (): UseFiltersReturn => {
     setFilterOptionsState({});
   }, []);
 
-  // Debounced filter function to avoid too frequent calculations
-  const debouncedFilter = useMemo(
-    () => debounce((options: Partial<FilterOptions>) => {
-      return filterTracks(options);
-    }, 300),
-    [filterTracks]
-  );
+  // Note: Could implement debounced filtering for better performance if needed
 
   const filteredTracks = useMemo(() => {
     return filterTracks(filterOptions);

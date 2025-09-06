@@ -128,7 +128,7 @@ export const useAppStore = create<AppStore>()(
         return tracks.filter(track => {
           // Genre filter
           if (filterOptions.genres && filterOptions.genres.length > 0) {
-            const trackGenres = track.artistDetails?.flatMap(artist => artist.genres) || [];
+            const trackGenres = track.artistDetails?.flatMap((artist: any) => artist.genres) || [];
             const hasMatchingGenre = filterOptions.genres.some(genre => 
               trackGenres.includes(genre)
             );

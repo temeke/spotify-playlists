@@ -104,7 +104,7 @@ export const DataSync: React.FC = () => {
   const stats = {
     tracks: tracks.length,
     tracksWithFeatures: tracks.filter(t => t.audioFeatures).length,
-    genres: new Set(tracks.flatMap(t => t.artistDetails?.flatMap(a => a.genres) || [])).size,
+    genres: new Set(tracks.flatMap(t => t.artistDetails?.flatMap((a: any) => a.genres) || [])).size,
   };
 
   return (

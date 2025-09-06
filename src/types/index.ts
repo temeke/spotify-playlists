@@ -30,8 +30,8 @@ export interface AppState {
   };
   loading: LoadingState;
   filters: FilterState;
-  tracks: EnhancedTrack[];
-  playlists: SpotifyPlaylist[];
+  tracks: import('./spotify').EnhancedTrack[];
+  playlists: import('./spotify').SpotifyPlaylist[];
 }
 
 export interface SpotifyUser {

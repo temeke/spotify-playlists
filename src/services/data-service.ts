@@ -2,9 +2,8 @@ import { spotifyAPI } from './spotify-api';
 import { db } from './database';
 import type { 
   EnhancedTrack, 
-  SpotifyPlaylist, 
   FilterState,
-  SpotifyUser
+  SpotifyAudioFeatures
 } from '../types';
 
 interface ProgressCallback {
@@ -88,7 +87,7 @@ class DataService {
           
           try {
             const featuresResponse = await spotifyAPI.getAudioFeatures(chunk);
-            const validFeatures = featuresResponse.audio_features.filter(Boolean);
+            const validFeatures = featuresResponse.audio_features.filter((f): f is SpotifyAudioFeatures => f !== null);
             
             if (validFeatures.length > 0) {
               await db.storeAudioFeatures(validFeatures);
