@@ -59,9 +59,10 @@ class SpotifyAuth {
     this.codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(this.codeVerifier);
 
-    // Store state and code verifier
+    // Store state and code verifier with timestamp
     localStorage.setItem('spotify_auth_state', state);
     localStorage.setItem('spotify_code_verifier', this.codeVerifier);
+    localStorage.setItem('spotify_auth_timestamp', Date.now().toString());
 
     const params = new URLSearchParams({
       response_type: 'code',

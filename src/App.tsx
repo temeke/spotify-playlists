@@ -75,10 +75,27 @@ function App() {
           }
           
           // If we have OAuth artifacts but no parameters, this means callback was broken
+          // BUT only show this error if the artifacts are recent (within 5 minutes)
           if (hasOAuthArtifacts && !hasOAuthParams && !storedParams) {
+            const stateTimestamp = localStorage.getItem('spotify_auth_timestamp');
+            const now = Date.now();
+            const fiveMinutesAgo = now - (5 * 60 * 1000);
+            
+            // If no timestamp or artifacts are old, just clean up silently
+            if (!stateTimestamp || parseInt(stateTimestamp) < fiveMinutesAgo) {
+              console.log('App: Cleaning up old OAuth artifacts');
+              localStorage.removeItem('spotify_auth_state');
+              localStorage.removeItem('spotify_code_verifier');
+              localStorage.removeItem('spotify_auth_timestamp');
+              setIsHandlingCallback(false);
+              return;
+            }
+            
+            // Only show error for recent failed attempts
             console.error('App: OAuth callback broken - parameters lost by hosting provider');
             localStorage.removeItem('spotify_auth_state');
             localStorage.removeItem('spotify_code_verifier');
+            localStorage.removeItem('spotify_auth_timestamp');
             alert(`Kirjautuminen epäonnistui: OAuth callback parametrit katosivat.\n\nTämä johtuu todennäköisesti hosting asetuksista.\n\nYritä kirjautua uudelleen.`);
             setIsHandlingCallback(false);
             return;
