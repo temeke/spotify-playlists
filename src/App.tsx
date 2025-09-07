@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppStore } from './stores/app-store';
 import { useSpotifyAuth } from './hooks/use-spotify-auth';
 import { AuthSetup } from './components/AuthSetup';
@@ -11,6 +11,7 @@ import { getStoredOAuthParams, clearStoredOAuthParams } from './oauth-handler';
 function App() {
   const { tracks, setAuthenticated, setUser, setAccessToken } = useAppStore();
   const { isAuthenticated } = useSpotifyAuth();
+  const callbackProcessedRef = useRef(false);
   const [isHandlingCallback, setIsHandlingCallback] = useState(() => {
     // Check immediately on mount if we have OAuth params
     const search = window.location.search;
@@ -63,8 +64,16 @@ function App() {
         hasOAuthArtifacts 
       });
       
-      if ((isCallbackPath || hasOAuthParams || storedParams || hasOAuthArtifacts) && !isHandlingCallback) {
+      if ((isCallbackPath || hasOAuthParams || storedParams || hasOAuthArtifacts)) {
         console.log('App: Handling OAuth callback', { isCallbackPath, hasOAuthParams });
+        
+        // Avoid processing the same callback multiple times using ref
+        if (callbackProcessedRef.current) {
+          console.log('App: Already processed callback, skipping');
+          return;
+        }
+        
+        callbackProcessedRef.current = true;
         setIsHandlingCallback(true);
         
         try {
@@ -101,7 +110,9 @@ function App() {
             return;
           }
           
+          console.log('🔍 App: Calling spotifyAuth.handleCallback()');
           const authState = await spotifyAuth.handleCallback();
+          console.log('🔍 App: handleCallback result:', authState);
           
           // Clear stored params after processing
           clearStoredOAuthParams();
@@ -132,6 +143,10 @@ function App() {
           window.history.replaceState(null, '', '/');
         } finally {
           setIsHandlingCallback(false);
+          // Reset ref only if we had an error - on success we want to stay processed
+          if (!spotifyAuth.isAuthenticated()) {
+            callbackProcessedRef.current = false;
+          }
         }
       }
     };

@@ -16,7 +16,13 @@ class SpotifyAuth {
 
   setClientId(clientId: string) {
     this.clientId = clientId;
-    this.redirectUri = `${window.location.origin}/callback`;
+    // Store clientId in localStorage to survive page reloads during OAuth flow
+    localStorage.setItem('spotify_client_id', clientId);
+    // Use 127.0.0.1 for local development (Spotify doesn't allow localhost)
+    const origin = window.location.hostname === 'localhost' 
+      ? `http://127.0.0.1:${window.location.port}` 
+      : window.location.origin;
+    this.redirectUri = `${origin}/callback`;
   }
 
   // Generate random string for state parameter
@@ -88,9 +94,29 @@ class SpotifyAuth {
     window.location.href = authUrl;
   }
 
+  // Load clientId from localStorage if not set
+  private ensureClientId(): boolean {
+    if (!this.clientId) {
+      const storedClientId = localStorage.getItem('spotify_client_id');
+      if (storedClientId) {
+        console.log('Auth: Loading stored clientId');
+        this.setClientId(storedClientId);
+        return true;
+      }
+      return false;
+    }
+    return true;
+  }
+
   // Handle callback from Spotify (Authorization Code flow)
   async handleCallback(): Promise<SpotifyAuthState | null> {
     console.log('Auth: Starting handleCallback');
+    
+    // Ensure we have clientId (restore from localStorage if needed)
+    if (!this.ensureClientId()) {
+      console.error('Auth: No clientId available for token exchange');
+      return null;
+    }
     const urlParams = new URLSearchParams(window.location.search);
     
     const code = urlParams.get('code');
@@ -244,6 +270,7 @@ class SpotifyAuth {
   // Clear auth state
   clearAuthState(): void {
     localStorage.removeItem('spotify_auth');
+    localStorage.removeItem('spotify_client_id');
   }
 
   // Check if user is authenticated

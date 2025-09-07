@@ -101,7 +101,11 @@ export const AuthSetup: React.FC = () => {
             <ol className="text-xs text-gray-400 space-y-1">
               <li>1. Mene osoitteeseen <span className="text-green-400">developer.spotify.com</span></li>
               <li>2. Luo uusi App</li>
-              <li>3. Lisää Redirect URI: <span className="text-green-400">{window.location.origin}/callback</span></li>
+              <li>3. Lisää Redirect URI: <span className="text-green-400">{
+                window.location.hostname === 'localhost' 
+                  ? `http://127.0.0.1:${window.location.port}/callback`
+                  : `${window.location.origin}/callback`
+              }</span></li>
               <li>4. Kopioi Client ID tähän</li>
             </ol>
             <div className="mt-4 p-3 bg-amber-900/20 border border-amber-500/30 rounded">
