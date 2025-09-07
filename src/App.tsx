@@ -6,11 +6,18 @@ import { DataSync } from './components/DataSync';
 import { MainApp } from './components/MainApp';
 import { LoadingScreen } from './components/LoadingScreen';
 import { spotifyAuth, spotifyAPI } from './services';
+import { getStoredOAuthParams, clearStoredOAuthParams } from './oauth-handler';
 
 function App() {
   const { tracks, setAuthenticated, setUser, setAccessToken } = useAppStore();
   const { isAuthenticated } = useSpotifyAuth();
-  const [isHandlingCallback, setIsHandlingCallback] = useState(false);
+  const [isHandlingCallback, setIsHandlingCallback] = useState(() => {
+    // Check immediately on mount if we have OAuth params
+    const search = window.location.search;
+    const hasParams = search.includes('code=') || search.includes('error=');
+    console.log('App: Initial state check', { search, hasParams, pathname: window.location.pathname });
+    return hasParams; // Start in handling mode if we have OAuth params
+  });
 
   // Check immediately if we landed on callback path with OAuth params
   const currentSearch = window.location.search;
@@ -25,7 +32,7 @@ function App() {
     search: currentSearch
   });
 
-  // Handle OAuth callback if we're on /callback path
+  // Handle OAuth callback - check for parameters immediately and continuously  
   useEffect(() => {
     const handleCallback = async () => {
       const currentPath = window.location.pathname;
@@ -41,13 +48,25 @@ function App() {
       // Check if we're on callback path OR if we have OAuth parameters (state/code)
       const isCallbackPath = currentPath === '/callback';
       const hasOAuthParams = currentSearch.includes('code=') || currentSearch.includes('error=');
+      const storedParams = getStoredOAuthParams();
       
-      if ((isCallbackPath || hasOAuthParams) && !isHandlingCallback) {
+      console.log('App: OAuth check', { isCallbackPath, hasOAuthParams, hasStoredParams: !!storedParams });
+      
+      if ((isCallbackPath || hasOAuthParams || storedParams) && !isHandlingCallback) {
         console.log('App: Handling OAuth callback', { isCallbackPath, hasOAuthParams });
         setIsHandlingCallback(true);
         
         try {
+          // If we have stored parameters, temporarily restore them to URL for processing
+          if (storedParams && !currentSearch) {
+            console.log('App: Using stored OAuth params', storedParams);
+            window.history.replaceState(null, '', window.location.pathname + storedParams);
+          }
+          
           const authState = await spotifyAuth.handleCallback();
+          
+          // Clear stored params after processing
+          clearStoredOAuthParams();
           
           if (authState && authState.accessToken) {
             console.log('App: Setting auth state from callback');
