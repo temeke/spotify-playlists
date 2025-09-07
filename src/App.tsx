@@ -70,7 +70,8 @@ function App() {
         } catch (error) {
           console.error('App: Error handling callback:', error);
           // Show user the error
-          alert(`Kirjautumisvirhe: ${error.message || 'Tuntematon virhe'}`);
+          const errorMessage = error instanceof Error ? error.message : 'Tuntematon virhe';
+          alert(`Kirjautumisvirhe: ${errorMessage}`);
           window.history.replaceState(null, '', '/');
         } finally {
           setIsHandlingCallback(false);
