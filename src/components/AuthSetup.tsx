@@ -47,7 +47,10 @@ export const AuthSetup: React.FC = () => {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => {
+          console.log('🔍 FORM ONSUBMIT CALLED');
+          handleSubmit(e);
+        }} className="space-y-6">
           <div>
             <label htmlFor="clientId" className="block text-sm font-medium text-gray-300 mb-2">
               Spotify Client ID
@@ -66,6 +69,9 @@ export const AuthSetup: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading || !clientIdInput.trim()}
+            onClick={(e) => {
+              console.log('🔍 BUTTON CLICKED', { isLoading, clientIdInput: clientIdInput.trim(), disabled: isLoading || !clientIdInput.trim() });
+            }}
             className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
           >
             {isLoading ? 'Kirjaudutaan...' : 'Kirjaudu Spotifyyn'}
