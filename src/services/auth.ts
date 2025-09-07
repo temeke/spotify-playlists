@@ -160,11 +160,20 @@ class SpotifyAuth {
         }),
       });
 
-      console.log('Auth: Token response status:', response.status);
+      console.log('Auth: Token response status:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Token exchange failed:', response.status, response.statusText, errorText);
+        console.error('Token exchange failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorText,
+          clientId: this.clientId,
+          redirectUri: this.redirectUri
+        });
+        
+        // Show user-friendly error
+        alert(`Kirjautuminen epäonnistui: ${response.status} ${response.statusText}\n\nTarkista että:\n1. Client ID on oikein\n2. Redirect URI on asetettu Spotify Appiin: ${this.redirectUri}`);
         return null;
       }
 

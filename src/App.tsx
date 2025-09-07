@@ -12,24 +12,38 @@ function App() {
   const { isAuthenticated } = useSpotifyAuth();
   const [isHandlingCallback, setIsHandlingCallback] = useState(false);
 
+  // Check immediately if we landed on callback path with OAuth params
+  const currentSearch = window.location.search;
+  const hasOAuthParams = currentSearch.includes('code=') || currentSearch.includes('error=');
+  
   console.log('App: Render state:', {
     isAuthenticated,
     tracksLength: tracks.length,
     currentPath: window.location.pathname,
-    isHandlingCallback
+    isHandlingCallback,
+    hasOAuthParams,
+    search: currentSearch
   });
 
   // Handle OAuth callback if we're on /callback path
   useEffect(() => {
     const handleCallback = async () => {
+      const currentPath = window.location.pathname;
+      const currentSearch = window.location.search;
+      
       console.log('App: handleCallback called', {
-        pathname: window.location.pathname,
+        pathname: currentPath,
         isHandlingCallback,
-        search: window.location.search
+        search: currentSearch,
+        hasParams: currentSearch.includes('code=') || currentSearch.includes('error=')
       });
       
-      if (window.location.pathname === '/callback' && !isHandlingCallback) {
-        console.log('App: Handling OAuth callback');
+      // Check if we're on callback path OR if we have OAuth parameters (state/code)
+      const isCallbackPath = currentPath === '/callback';
+      const hasOAuthParams = currentSearch.includes('code=') || currentSearch.includes('error=');
+      
+      if ((isCallbackPath || hasOAuthParams) && !isHandlingCallback) {
+        console.log('App: Handling OAuth callback', { isCallbackPath, hasOAuthParams });
         setIsHandlingCallback(true);
         
         try {
@@ -49,11 +63,14 @@ function App() {
             // Redirect to main app
             window.history.replaceState(null, '', '/');
           } else {
-            console.error('App: Failed to get auth state from callback');
+            console.error('App: Failed to get auth state from callback - token exchange likely failed');
+            console.log('App: Check console for detailed error messages from token exchange');
             window.history.replaceState(null, '', '/');
           }
         } catch (error) {
           console.error('App: Error handling callback:', error);
+          // Show user the error
+          alert(`Kirjautumisvirhe: ${error.message || 'Tuntematon virhe'}`);
           window.history.replaceState(null, '', '/');
         } finally {
           setIsHandlingCallback(false);
@@ -61,19 +78,27 @@ function App() {
       }
     };
 
-    // Initial check
+    // Initial check on mount
     handleCallback();
 
     // Listen for URL changes (for mock auth and other programmatic navigation)
     const handlePopState = () => {
-      console.log('App: URL changed, checking for callback');
+      console.log('App: URL changed via popstate, checking for callback');
+      handleCallback();
+    };
+
+    // Also listen for hashchange (some routing scenarios)
+    const handleHashChange = () => {
+      console.log('App: Hash changed, checking for callback');
       handleCallback();
     };
 
     window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handleHashChange);
     
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, [isHandlingCallback, setAuthenticated, setUser, setAccessToken]);
 
