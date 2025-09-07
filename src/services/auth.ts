@@ -74,7 +74,16 @@ class SpotifyAuth {
       show_dialog: 'true'
     });
 
-    window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+    const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
+    console.log('🔍 SPOTIFY AUTH URL:', authUrl);
+    console.log('🔍 AUTH PARAMS:', {
+      client_id: this.clientId,
+      redirect_uri: this.redirectUri,
+      state: state.substring(0, 8) + '...',
+      scope: this.scopes.join(' ')
+    });
+
+    window.location.href = authUrl;
   }
 
   // Handle callback from Spotify (Authorization Code flow)
