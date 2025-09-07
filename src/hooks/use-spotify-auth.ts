@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useAppStore } from '../stores/app-store';
-import { spotifyAuth } from '../services/auth';
-import { spotifyAPI } from '../services/spotify-api';
+import { spotifyAuth, spotifyAPI } from '../services';
 
 export const useSpotifyAuth = () => {
   const { 
@@ -71,12 +70,13 @@ export const useSpotifyAuth = () => {
     return () => clearInterval(interval);
   }, [auth.isAuthenticated]);
 
-  const login = useCallback(async () => {
-    if (!spotifyClientId) {
+  const login = useCallback(async (clientId?: string) => {
+    const idToUse = clientId || spotifyClientId;
+    if (!idToUse) {
       throw new Error('Spotify Client ID not set');
     }
     
-    spotifyAuth.setClientId(spotifyClientId);
+    spotifyAuth.setClientId(idToUse);
     await spotifyAuth.initiateLogin();
   }, [spotifyClientId]);
 

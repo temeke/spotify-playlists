@@ -5,8 +5,7 @@ import { AuthSetup } from './components/AuthSetup';
 import { DataSync } from './components/DataSync';
 import { MainApp } from './components/MainApp';
 import { LoadingScreen } from './components/LoadingScreen';
-import { spotifyAuth } from './services/auth';
-import { spotifyAPI } from './services/spotify-api';
+import { spotifyAuth, spotifyAPI } from './services';
 
 function App() {
   const { tracks, setAuthenticated, setUser, setAccessToken } = useAppStore();
@@ -23,6 +22,12 @@ function App() {
   // Handle OAuth callback if we're on /callback path
   useEffect(() => {
     const handleCallback = async () => {
+      console.log('App: handleCallback called', {
+        pathname: window.location.pathname,
+        isHandlingCallback,
+        search: window.location.search
+      });
+      
       if (window.location.pathname === '/callback' && !isHandlingCallback) {
         console.log('App: Handling OAuth callback');
         setIsHandlingCallback(true);
@@ -56,7 +61,20 @@ function App() {
       }
     };
 
+    // Initial check
     handleCallback();
+
+    // Listen for URL changes (for mock auth and other programmatic navigation)
+    const handlePopState = () => {
+      console.log('App: URL changed, checking for callback');
+      handleCallback();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [isHandlingCallback, setAuthenticated, setUser, setAccessToken]);
 
   // Show callback loading screen if handling OAuth

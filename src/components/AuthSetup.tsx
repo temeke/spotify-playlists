@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useSpotifyAuth } from '../hooks/use-spotify-auth';
+import { useMockServices } from '../config';
 
 export const AuthSetup: React.FC = () => {
   const { login, setClientId, spotifyClientId } = useSpotifyAuth();
   const [clientIdInput, setClientIdInput] = useState(spotifyClientId);
   const [isLoading, setIsLoading] = useState(false);
+  const isMockMode = useMockServices();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,9 +18,12 @@ export const AuthSetup: React.FC = () => {
 
     try {
       setIsLoading(true);
-      setClientId(clientIdInput.trim());
-      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to ensure state is saved
-      await login();
+      const trimmedClientId = clientIdInput.trim();
+      setClientId(trimmedClientId);
+      // Pass the clientId directly to avoid state update timing issues
+      await login(trimmedClientId);
+      // Reset loading state after successful login
+      setIsLoading(false);
     } catch (error) {
       console.error('Login error:', error);
       alert('Kirjautuminen epäonnistui. Tarkista Client ID.');
@@ -63,17 +68,34 @@ export const AuthSetup: React.FC = () => {
           </button>
         </form>
 
-        <div className="mt-8 p-4 bg-gray-800 rounded-lg border border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-300 mb-2">
-            Spotify App Setup:
-          </h3>
-          <ol className="text-xs text-gray-400 space-y-1">
-            <li>1. Mene osoitteeseen <span className="text-green-400">developer.spotify.com</span></li>
-            <li>2. Luo uusi App</li>
-            <li>3. Lisää Redirect URI: <span className="text-green-400">{window.location.origin}/callback</span></li>
-            <li>4. Kopioi Client ID tähän</li>
-          </ol>
-        </div>
+        {isMockMode ? (
+          <div className="mt-8 p-4 bg-blue-900/20 rounded-lg border border-blue-500/30">
+            <div className="flex items-center mb-2">
+              <span className="text-lg mr-2">🧪</span>
+              <h3 className="text-sm font-semibold text-blue-300">
+                Mock-tila käytössä - Testaamista varten
+              </h3>
+            </div>
+            <div className="text-xs text-blue-200 space-y-1">
+              <p>Voit testata sovellusta ilman oikeaa Spotify API:a:</p>
+              <p className="mt-2">• Syötä mikä tahansa teksti Client ID kenttään (esim. "test")</p>
+              <p>• Sovellus simuloi Spotify kirjautumisen</p>
+              <p>• Saat käyttöösi mock-dataa testausta varten</p>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-8 p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <h3 className="text-sm font-semibold text-gray-300 mb-2">
+              Spotify App Setup:
+            </h3>
+            <ol className="text-xs text-gray-400 space-y-1">
+              <li>1. Mene osoitteeseen <span className="text-green-400">developer.spotify.com</span></li>
+              <li>2. Luo uusi App</li>
+              <li>3. Lisää Redirect URI: <span className="text-green-400">{window.location.origin}/callback</span></li>
+              <li>4. Kopioi Client ID tähän</li>
+            </ol>
+          </div>
+        )}
       </div>
     </div>
   );

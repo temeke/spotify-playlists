@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores/app-store';
 import { useSpotifyAuth } from '../hooks/use-spotify-auth';
-import { dataService } from '../services/data-service';
+import { dataService } from '../services';
 
 export const DataSync: React.FC = () => {
   const { 
