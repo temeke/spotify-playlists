@@ -94,6 +94,11 @@ export const AuthSetup: React.FC = () => {
               <li>3. Lisää Redirect URI: <span className="text-green-400">{window.location.origin}/callback</span></li>
               <li>4. Kopioi Client ID tähän</li>
             </ol>
+            <div className="mt-4 p-3 bg-amber-900/20 border border-amber-500/30 rounded">
+              <p className="text-xs text-amber-200">
+                ⚠️ Jos kirjautuminen epäonnistuu, varmista että Redirect URI on täsmälleen oikein Spotify App asetuksissa.
+              </p>
+            </div>
           </div>
         )}
       </div>

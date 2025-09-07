@@ -50,9 +50,20 @@ function App() {
       const hasOAuthParams = currentSearch.includes('code=') || currentSearch.includes('error=');
       const storedParams = getStoredOAuthParams();
       
-      console.log('App: OAuth check', { isCallbackPath, hasOAuthParams, hasStoredParams: !!storedParams });
+      // NEW: Check if we have OAuth artifacts in localStorage (state + code_verifier)
+      // This means we went through OAuth flow but callback parameters were lost
+      const hasOAuthArtifacts = localStorage.getItem('spotify_auth_state') && 
+                                localStorage.getItem('spotify_code_verifier') && 
+                                !localStorage.getItem('spotify_auth');
       
-      if ((isCallbackPath || hasOAuthParams || storedParams) && !isHandlingCallback) {
+      console.log('App: OAuth check', { 
+        isCallbackPath, 
+        hasOAuthParams, 
+        hasStoredParams: !!storedParams,
+        hasOAuthArtifacts 
+      });
+      
+      if ((isCallbackPath || hasOAuthParams || storedParams || hasOAuthArtifacts) && !isHandlingCallback) {
         console.log('App: Handling OAuth callback', { isCallbackPath, hasOAuthParams });
         setIsHandlingCallback(true);
         
@@ -61,6 +72,16 @@ function App() {
           if (storedParams && !currentSearch) {
             console.log('App: Using stored OAuth params', storedParams);
             window.history.replaceState(null, '', window.location.pathname + storedParams);
+          }
+          
+          // If we have OAuth artifacts but no parameters, this means callback was broken
+          if (hasOAuthArtifacts && !hasOAuthParams && !storedParams) {
+            console.error('App: OAuth callback broken - parameters lost by hosting provider');
+            localStorage.removeItem('spotify_auth_state');
+            localStorage.removeItem('spotify_code_verifier');
+            alert(`Kirjautuminen epäonnistui: OAuth callback parametrit katosivat.\n\nTämä johtuu todennäköisesti hosting asetuksista.\n\nYritä kirjautua uudelleen.`);
+            setIsHandlingCallback(false);
+            return;
           }
           
           const authState = await spotifyAuth.handleCallback();

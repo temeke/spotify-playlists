@@ -1,5 +1,2 @@
-# Preserve OAuth callback with query parameters
-/callback*  /index.html  200
-
-# Handle all other SPA routes
-/* /index.html 200
+# Handle SPA routing - preserve all query parameters
+/*  /index.html  200
