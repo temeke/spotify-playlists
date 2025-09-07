@@ -50,7 +50,7 @@ function App() {
       const hasOAuthParams = currentSearch.includes('code=') || currentSearch.includes('error=');
       const storedParams = getStoredOAuthParams();
       
-      // NEW: Check if we have OAuth artifacts in localStorage (state + code_verifier)
+      // Check if we have OAuth artifacts in localStorage (state + code_verifier)
       // This means we went through OAuth flow but callback parameters were lost
       const hasOAuthArtifacts = localStorage.getItem('spotify_auth_state') && 
                                 localStorage.getItem('spotify_code_verifier') && 
