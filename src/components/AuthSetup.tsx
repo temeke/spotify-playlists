@@ -17,15 +17,19 @@ export const AuthSetup: React.FC = () => {
     }
 
     try {
+      console.log('🔍 FORM SUBMIT', clientIdInput);
       setIsLoading(true);
       const trimmedClientId = clientIdInput.trim();
+      console.log('🔍 TRIMMED CLIENT ID', trimmedClientId);
       setClientId(trimmedClientId);
       // Pass the clientId directly to avoid state update timing issues
+      console.log('🔍 CALLING LOGIN');
       await login(trimmedClientId);
+      console.log('🔍 LOGIN SUCCESS');
       // Reset loading state after successful login
       setIsLoading(false);
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('🔍 FORM LOGIN ERROR:', error);
       alert('Kirjautuminen epäonnistui. Tarkista Client ID.');
       setIsLoading(false);
     }

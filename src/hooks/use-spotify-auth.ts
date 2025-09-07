@@ -71,13 +71,25 @@ export const useSpotifyAuth = () => {
   }, [auth.isAuthenticated]);
 
   const login = useCallback(async (clientId?: string) => {
+    console.log('🔍 LOGIN CALLED', { clientId, spotifyClientId });
     const idToUse = clientId || spotifyClientId;
+    console.log('🔍 CLIENT ID TO USE', idToUse);
+    
     if (!idToUse) {
+      console.error('🔍 NO CLIENT ID');
       throw new Error('Spotify Client ID not set');
     }
     
-    spotifyAuth.setClientId(idToUse);
-    await spotifyAuth.initiateLogin();
+    try {
+      console.log('🔍 SETTING CLIENT ID');
+      spotifyAuth.setClientId(idToUse);
+      console.log('🔍 CALLING INITIATE LOGIN');
+      await spotifyAuth.initiateLogin();
+      console.log('🔍 INITIATE LOGIN COMPLETED');
+    } catch (error) {
+      console.error('🔍 LOGIN ERROR', error);
+      throw error;
+    }
   }, [spotifyClientId]);
 
   const handleLogout = useCallback(() => {
