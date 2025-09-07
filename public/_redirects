@@ -1,3 +1,5 @@
-# Netlify redirects for React SPA
-# Handle client-side routing
+# Preserve OAuth callback with query parameters
+/callback*  /index.html  200
+
+# Handle all other SPA routes
 /* /index.html 200
