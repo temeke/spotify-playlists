@@ -13,11 +13,12 @@ function App() {
   const { isAuthenticated } = useSpotifyAuth();
   const callbackProcessedRef = useRef(false);
   const [isHandlingCallback, setIsHandlingCallback] = useState(() => {
-    // Check immediately on mount if we have OAuth params
+    // Only start in handling mode if we have OAuth params AND no existing auth
     const search = window.location.search;
     const hasParams = search.includes('code=') || search.includes('error=');
-    console.log('App: Initial state check', { search, hasParams, pathname: window.location.pathname });
-    return hasParams; // Start in handling mode if we have OAuth params
+    const hasExistingAuth = spotifyAuth.isAuthenticated();
+    console.log('App: Initial state check', { search, hasParams, hasExistingAuth, pathname: window.location.pathname });
+    return hasParams && !hasExistingAuth; // Only handle callback if not already authenticated
   });
 
   // Check immediately if we landed on callback path with OAuth params
@@ -65,6 +66,18 @@ function App() {
       });
       
       if ((isCallbackPath || hasOAuthParams || storedParams || hasOAuthArtifacts)) {
+        // Skip callback processing if already authenticated
+        if (spotifyAuth.isAuthenticated()) {
+          console.log('App: Already authenticated, clearing OAuth artifacts and redirecting');
+          // Clean up OAuth artifacts if they exist
+          localStorage.removeItem('spotify_auth_state');
+          localStorage.removeItem('spotify_code_verifier');  
+          localStorage.removeItem('spotify_auth_timestamp');
+          clearStoredOAuthParams();
+          window.history.replaceState(null, '', '/');
+          return;
+        }
+        
         console.log('App: Handling OAuth callback', { isCallbackPath, hasOAuthParams });
         
         // Avoid processing the same callback multiple times using ref
