@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAppStore } from '../stores/app-store';
 import { useSpotifyAuth } from '../hooks/use-spotify-auth';
 import { useFilters } from '../hooks/use-filters';
@@ -6,10 +6,9 @@ import { FilterPanel } from './filters/FilterPanel';
 import { PlaylistGenerator } from './PlaylistGenerator';
 
 export const MainApp: React.FC = () => {
-  const { tracks, generatedPlaylists } = useAppStore();
+  const { tracks, generatedPlaylists, activeTab, setActiveTab } = useAppStore();
   const { user, logout } = useSpotifyAuth();
   const { previewCount, filterCount } = useFilters();
-  const [activeTab, setActiveTab] = useState<'filters' | 'generate' | 'history'>('filters');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-900 via-black to-green-900">

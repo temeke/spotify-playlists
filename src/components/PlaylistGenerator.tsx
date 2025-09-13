@@ -7,15 +7,23 @@ import { generatePlaylistName, generatePlaylistDescription, formatDuration, shuf
 
 export const PlaylistGenerator: React.FC = () => {
   const { user, accessToken } = useSpotifyAuth();
-  const { addGeneratedPlaylist } = useAppStore();
+  const { addGeneratedPlaylist, playlistSettings, setPlaylistSettings } = useAppStore();
   const { filterOptions, filteredTracks } = useFilters();
-  
+
   const [playlistName, setPlaylistName] = useState('');
   const [playlistDescription, setPlaylistDescription] = useState('');
-  const [maxTracks, setMaxTracks] = useState(50);
-  const [shuffleTracks, setShuffleTracks] = useState(true);
-  const [removeDuplicates, setRemoveDuplicates] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const { maxTracks, shuffleTracks, removeDuplicates } = playlistSettings;
+
+  const setMaxTracks = (value: number) =>
+    setPlaylistSettings({ maxTracks: value });
+
+  const setShuffleTracks = (value: boolean) =>
+    setPlaylistSettings({ shuffleTracks: value });
+
+  const setRemoveDuplicates = (value: boolean) =>
+    setPlaylistSettings({ removeDuplicates: value });
 
   const handleGenerate = async () => {
     if (!accessToken || !user) {

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAppStore } from '../stores/app-store';
 import type { FilterOptions, EnhancedTrack } from '../types';
 
@@ -13,26 +13,28 @@ export interface UseFiltersReturn {
 }
 
 export const useFilters = (): UseFiltersReturn => {
-  const { filterTracks } = useAppStore();
-  const [filterOptions, setFilterOptionsState] = useState<Partial<FilterOptions>>({});
+  const {
+    filterTracks,
+    filterOptions,
+    setFilterOptions: setStoreFilterOptions,
+    updateFilterOption,
+    clearFilterOptions
+  } = useAppStore();
 
   const setFilterOptions = useCallback((options: Partial<FilterOptions>) => {
-    setFilterOptionsState(options);
-  }, []);
+    setStoreFilterOptions(options);
+  }, [setStoreFilterOptions]);
 
   const updateFilter = useCallback(<K extends keyof FilterOptions>(
-    key: K, 
+    key: K,
     value: FilterOptions[K]
   ) => {
-    setFilterOptionsState(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  }, []);
+    updateFilterOption(key, value);
+  }, [updateFilterOption]);
 
   const clearFilters = useCallback(() => {
-    setFilterOptionsState({});
-  }, []);
+    clearFilterOptions();
+  }, [clearFilterOptions]);
 
   // Note: Could implement debounced filtering for better performance if needed
 

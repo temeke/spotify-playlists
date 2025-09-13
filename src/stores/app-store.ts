@@ -24,10 +24,10 @@ interface AppStore extends AppState {
   // Data actions
   setTracks: (tracks: EnhancedTrack[]) => void;
   setFilters: (filters: FilterState) => void;
-  
+
   // Filter application
   filterTracks: (filterOptions: Partial<FilterOptions>) => EnhancedTrack[];
-  
+
   // Generated playlists
   generatedPlaylists: GeneratedPlaylist[];
   addGeneratedPlaylist: (playlist: GeneratedPlaylist) => void;
@@ -36,6 +36,24 @@ interface AppStore extends AppState {
   // Client configuration
   spotifyClientId: string;
   setSpotifyClientId: (clientId: string) => void;
+
+  // UI State persistence
+  activeTab: 'filters' | 'generate' | 'history';
+  setActiveTab: (tab: 'filters' | 'generate' | 'history') => void;
+
+  // Filter options persistence
+  filterOptions: Partial<FilterOptions>;
+  setFilterOptions: (options: Partial<FilterOptions>) => void;
+  updateFilterOption: <K extends keyof FilterOptions>(key: K, value: FilterOptions[K]) => void;
+  clearFilterOptions: () => void;
+
+  // Playlist generation settings persistence
+  playlistSettings: {
+    maxTracks: number;
+    shuffleTracks: boolean;
+    removeDuplicates: boolean;
+  };
+  setPlaylistSettings: (settings: Partial<AppStore['playlistSettings']>) => void;
 }
 
 const initialLoadingState: LoadingState = {
@@ -74,6 +92,13 @@ export const useAppStore = create<AppStore>()(
       playlists: [],
       generatedPlaylists: [],
       spotifyClientId: '',
+      activeTab: 'filters',
+      filterOptions: {},
+      playlistSettings: {
+        maxTracks: 50,
+        shuffleTracks: true,
+        removeDuplicates: true,
+      },
 
       // Auth actions
       setAuthenticated: (isAuthenticated) =>
@@ -101,6 +126,8 @@ export const useAppStore = create<AppStore>()(
           tracks: [],
           playlists: [],
           filters: initialFilterState,
+          activeTab: 'filters',
+          filterOptions: {},
         })),
 
       // Loading actions
@@ -124,7 +151,7 @@ export const useAppStore = create<AppStore>()(
       // Filter tracks based on criteria
       filterTracks: (filterOptions) => {
         const { tracks } = get();
-        
+
         return tracks.filter(track => {
           // Genre filter
           if (filterOptions.genres && filterOptions.genres.length > 0) {
@@ -215,6 +242,28 @@ export const useAppStore = create<AppStore>()(
       // Client configuration
       setSpotifyClientId: (clientId) =>
         set(() => ({ spotifyClientId: clientId })),
+
+      // UI State persistence
+      setActiveTab: (activeTab) =>
+        set(() => ({ activeTab })),
+
+      // Filter options persistence
+      setFilterOptions: (filterOptions) =>
+        set(() => ({ filterOptions })),
+
+      updateFilterOption: (key, value) =>
+        set((state) => ({
+          filterOptions: { ...state.filterOptions, [key]: value }
+        })),
+
+      clearFilterOptions: () =>
+        set(() => ({ filterOptions: {} })),
+
+      // Playlist generation settings persistence
+      setPlaylistSettings: (settings) =>
+        set((state) => ({
+          playlistSettings: { ...state.playlistSettings, ...settings }
+        })),
     }),
     {
       name: 'spotify-playlist-generator-store',
@@ -226,6 +275,9 @@ export const useAppStore = create<AppStore>()(
         },
         generatedPlaylists: state.generatedPlaylists,
         spotifyClientId: state.spotifyClientId,
+        activeTab: state.activeTab,
+        filterOptions: state.filterOptions,
+        playlistSettings: state.playlistSettings,
       }),
     }
   )
